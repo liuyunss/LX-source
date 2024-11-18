@@ -1,8 +1,8 @@
 # LX-source
 
 ### 落雪软件地址
-- 桌面版[https://github.com/lyswhut/lx-music-desktop]
-- 手机版[https://github.com/lyswhut/lx-music-mobile]
+- [桌面版](https://github.com/lyswhut/lx-music-desktop)
+- [手机版](https://github.com/lyswhut/lx-music-mobile)
 
 ### 落雪源
 ```java
