@@ -14,12 +14,27 @@ https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/nya.js
 ```java
 https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/sixyin-v1.2.0.js
 ```
+```
+```java
+https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/sixyin-v1.2.1.js
+```
 ```java
 https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/yc.js
 ```
 ```java
 https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/yh.js
 ```
+```java
+https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/yyxzq.js
+```
+```java
+https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/lx-music.js
+```
+```java
+https://cdn.jsdelivr.net/gh/liuyunss/LX-source@master/jh.js
+```
+
+
 
 ### 其他源
 ```java
