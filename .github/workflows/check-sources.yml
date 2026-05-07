@@ -1,0 +1,103 @@
+name: 源可用性检测
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 每天 UTC 9:00 (北京时间 17:00)
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  check-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检测源可用性
+        id: check
+        run: |
+          echo "开始检测源可用性..."
+          echo "" > report.md
+          echo "## 源检测报告" >> report.md
+          echo "检测时间: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> report.md
+          echo "" >> report.md
+          echo "| 源 | 状态 |" >> report.md
+          echo "|---|------|" >> report.md
+
+          FAILED=0
+
+          # 本仓库的源
+          LOCAL_SOURCES=(
+            "ikun-source-HK.js|IKun源"
+            "nya.js|Nya源"
+            "sixyin-v1.2.1.js|SixYin v1.2.1"
+            "sixyin-v1.2.0.js|SixYin v1.2.0"
+            "yc.js|YC源"
+            "yh.js|YH源"
+            "yyxzq.js|YYXZQ源"
+            "lx-music.js|LX Music源"
+            "jh.js|JH源"
+          )
+
+          # 第三方源
+          THIRD_SOURCES=(
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/sixyin/latest.js|Pdone-SixYin"
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/huibq/latest.js|Pdone-Huibq"
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/flower/latest.js|Pdone-Flower"
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/lx/latest.js|Pdone-LX"
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/ikun/latest.js|Pdone-IKun"
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/grass/latest.js|Pdone-Grass"
+            "https://raw.githubusercontent.com/pdone/lx-music-source/main/juhe/latest.js|Pdone-Juhe"
+          )
+
+          REPO="https://raw.githubusercontent.com/liuyunss/LX-source/master"
+
+          echo "### 本仓库源" >> report.md
+          for entry in "${LOCAL_SOURCES[@]}"; do
+            IFS='|' read -r file name <<< "$entry"
+            URL="$REPO/$file"
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 15 "$URL")
+            if [ "$CODE" = "200" ]; then
+              echo "| $name | ✅ 正常 |" >> report.md
+            else
+              echo "| $name | ❌ 失败 (HTTP $CODE) |" >> report.md
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo "" >> report.md
+          echo "### 第三方源 (pdone/lx-music-source)" >> report.md
+          for entry in "${THIRD_SOURCES[@]}"; do
+            IFS='|' read -r url name <<< "$entry"
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 15 "$url")
+            if [ "$CODE" = "200" ]; then
+              echo "| $name | ✅ 正常 |" >> report.md
+            else
+              echo "| $name | ❌ 失败 (HTTP $CODE) |" >> report.md
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo "" >> report.md
+          if [ "$FAILED" -gt 0 ]; then
+            echo "⚠️ **有 $FAILED 个源不可用，需要检查！**" >> report.md
+            echo "has_issue=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ 所有源均正常。" >> report.md
+            echo "has_issue=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "" >> report.md
+          echo "---" >> report.md
+          echo "_此报告由 GitHub Actions 自动生成_" >> report.md
+
+      - name: 创建 Issue 提醒
+        if: steps.check.outputs.has_issue == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('report.md', 'utf8');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `⚠️ 源检测异常 - ${new Date().toISOString().split('T')[0]}`,
+              body: report,
+              labels: ['source-check']
+            });
